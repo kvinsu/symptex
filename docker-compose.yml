@@ -1,0 +1,16 @@
+services:
+  api:
+    build:
+      context: ./api
+    ports:
+      - "8000:8000"
+    restart: always
+
+  frontend:
+    build:
+      context: ./frontend
+    ports:
+      - "8501:8501"
+    depends_on:
+      - api
+    restart: always
