@@ -1,5 +1,6 @@
 langchain
-langchain-ollama
+langchain-ollama == 0.2.0
+langgraph
 fastapi
 uvicorn
 langserve
