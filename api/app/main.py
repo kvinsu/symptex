@@ -1,6 +1,10 @@
 # API entry point
+from dotenv import load_dotenv
 from fastapi import FastAPI
 from api.app.routers import chat
+
+load_dotenv()
+
 
 app = FastAPI(
     title="Symptex LangChain Server",
