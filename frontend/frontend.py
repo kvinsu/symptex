@@ -9,7 +9,7 @@ logging.basicConfig(level=logging.DEBUG)
 st.set_page_config(page_title="Symptex", page_icon="🤖")
 st.title("Symptex")
 st.info(
-    "I'm not feeling well, what's going on with me?"
+    "Sprechen Sie hier mit dem zu behandelnden Patienten."
 )
 
 # Initialize chat history
