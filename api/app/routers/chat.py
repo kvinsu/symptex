@@ -4,7 +4,7 @@ from langchain_core.messages import HumanMessage
 from pydantic import BaseModel
 import logging
 
-from api.chains.symptex_chain import app
+from api.chains.symptex_chain import symptex_app
 
 logger = logging.getLogger('uvicorn.error')
 logger.setLevel(logging.DEBUG)
@@ -21,11 +21,12 @@ async def stream_response(message: str):
     config = {"configurable": {"thread_id": "1"}}
     logger.debug("STREAMING")
 
-    async for msg, metadata in app.astream(
+    async for msg, metadata in symptex_app.astream(
         {"messages": [HumanMessage(message)]}, config, stream_mode="messages"):
+        logger.debug(msg)
         # Get AIMessageChunks only
         if msg.content and not isinstance(msg, HumanMessage):
-            logger.debug(msg.content)
+            # logger.debug(msg.content)
             yield msg.content
 
 @router.post("/chat")
