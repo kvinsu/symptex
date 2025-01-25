@@ -12,13 +12,18 @@ from langgraph.checkpoint.memory import MemorySaver
 from langgraph.graph import START, StateGraph, END
 from langgraph.graph.message import add_messages
 import langsmith as ls
-
 from typing import Annotated
 from typing_extensions import TypedDict
 from operator import add
-
 from api.chains.evaluation.evaluator import evaluate_response_by_llm
+import logging
 
+# Load env variables for LangSmith to work
+load_dotenv()
+
+# Set up logging
+logger = logging.getLogger('symptex_chain')
+logger.setLevel(logging.DEBUG)
 
 class CustomState(TypedDict):
     messages: Annotated[list[AnyMessage], add_messages]
@@ -30,6 +35,7 @@ PROMPT = ChatPromptTemplate.from_messages(
         SystemMessagePromptTemplate.from_template(
             """
             Please act as a patient with a health issue, and you are now speaking with a doctor in german.
+            Facial expressions, gestures and actions of the patient should be displayed in german as well.
             Your goal is to act realistically as a patient based on the progression of your condition and your medical history.
             Respond directly to the doctor’s questions without providing unnecessary details unless explicitly asked.
             
@@ -50,33 +56,43 @@ PROMPT = ChatPromptTemplate.from_messages(
     ]
 )
 
-# Load env variables for LangSmith to work
-load_dotenv()
+# Ensure environment variables are set
+OLLAMA_API_URL = os.environ.get("OLLAMA_API_URL")
+if not OLLAMA_API_URL:
+    logger.error("OLLAMA_API_URL environment variable not set")
+    raise ValueError("OLLAMA_API_URL environment variable not set")
 
 llm = ChatOllama(
     base_url=os.environ.get("OLLAMA_API_URL"),
-    model="mixtral",
+    model="llama3.1",
     temperature=0.5,
 )
 
 @ls.traceable(
     run_type="llm",
     name="Patient LLM Call Decorator",
-    metadata={"model": "mixtral", "temperature": 0.5},
+    metadata={"model": "llama3.1", "temperature": 0.5},
 )
 async def call_patient_model(state: CustomState):
-    print("Calling patient model")
+    logger.debug("Calling patient model")
     chain = PROMPT | llm
 
-    # Invoke the chain
-    response = await chain.ainvoke(state)
+    try:
+        # Invoke the chain
+        response = await chain.ainvoke(state)
+        logger.debug("Received response from patient model")
+        
+        # Evaluate response
+        # evaluation = await evaluate_response_by_llm(state, response)
+        evaluation = '' # TODO
 
-    # Evaluate response
-    # evaluation = await evaluate_response_by_llm(state, response)
+        # Save the evaluation in the state
+        state["evaluations"].append(evaluation)
 
-    return {"messages": response}
-
-
+        return {"messages": response, "evaluations": state["evaluations"]}
+    except Exception as e:
+        logger.error("Error calling patient model: %s", str(e))
+        raise
 
 # Define new graph
 workflow = StateGraph(state_schema=CustomState)
