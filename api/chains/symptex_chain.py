@@ -35,7 +35,6 @@ PROMPT = ChatPromptTemplate.from_messages(
         SystemMessagePromptTemplate.from_template(
             """
             Please act as a patient with a health issue, and you are now speaking with a doctor in german.
-            Facial expressions, gestures and actions of the patient should be displayed in german as well.
             Your goal is to act realistically as a patient based on the progression of your condition and your medical history.
             Respond directly to the doctor’s questions without providing unnecessary details unless explicitly asked.
             
