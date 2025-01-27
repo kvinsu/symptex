@@ -15,7 +15,7 @@ import langsmith as ls
 from typing import Annotated
 from typing_extensions import TypedDict
 from operator import add
-from api.chains.evaluation.evaluator import evaluate_response_by_llm
+# from api.chains.evaluation.evaluator import evaluate_response_by_llm
 import logging
 
 # Load env variables for LangSmith to work

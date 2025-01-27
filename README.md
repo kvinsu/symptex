@@ -6,7 +6,6 @@ history-taking skills.
 ## Prerequisites
 
 * [Docker](https://docs.docker.com/get-started/get-docker/)
-* Python 3.12
 * Browser of your choice to interact with the chatbot
 
 ## Getting Started
