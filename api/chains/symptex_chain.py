@@ -58,11 +58,12 @@ PROMPT = ChatPromptTemplate.from_messages(
 # Ensure environment variables are set
 OLLAMA_API_URL = os.environ.get("OLLAMA_API_URL")
 if not OLLAMA_API_URL:
-    logger.error("OLLAMA_API_URL environment variable not set")
-    raise ValueError("OLLAMA_API_URL environment variable not set")
+    logger.error("OLLAMA_API_URL environment variable not set, setting to default")
+    OLLAMA_API_URL = "http://ollama:11434"
 
 llm = ChatOllama(
-    base_url=os.environ.get("OLLAMA_API_URL"),
+    base_url=OLLAMA_API_URL,
+    # Change model and temperature here
     model="llama3.1",
     temperature=0.5,
 )

@@ -11,8 +11,8 @@ history-taking skills.
 ## Getting Started
 
 1. Run `docker compose up --build` in the project's root directory.
-2. In another terminal, navigate to the project's root directory as well and execute `docker compose exec ollama ollama pull llama3.1` to pull (download) the LLM. Depending on the internet connection as well as the model's size, this may take some time.
-3. Interact with the Symptex chatbot through the Streamlit frontend URL.
+2. In another terminal, execute `docker compose exec ollama ollama pull llama3.1` to pull (download) the LLM. Depending on the internet connection as well as the model's size, this may take some time, but is only required once.
+3. Interact with the Symptex chatbot locally through [Streamlit frontend URL](http://localhost:8501).
 
 Note: The first prompt/API call usually takes a while, since the model needs to be loaded into the memory first.
 
