@@ -16,13 +16,15 @@ router = APIRouter()
 # Input model
 class ChatRequest(BaseModel):
     message: str
+    condition: str = "dementia" # Default condition
 
-async def stream_response(message: str) -> AsyncGenerator[str, None]:
+async def stream_response(message: str, condition: str) -> AsyncGenerator[str, None]:
     """
     Stream responses from the symptex_app.
 
     Args:
         message (str): The input message from the user.
+        condition (str): The medical condition to simulate.
 
     Yields:
         str: The response message from the LLM.
@@ -33,7 +35,14 @@ async def stream_response(message: str) -> AsyncGenerator[str, None]:
 
     try:
         async for msg, metadata in symptex_app.astream(
-            {"messages": [HumanMessage(message)]}, config, stream_mode="messages"):
+            {
+                "messages": [HumanMessage(message)],
+                "condition": condition,
+                "evaluations": []
+            },
+            config, 
+            stream_mode="messages"
+        ):
             # Get AIMessageChunks only
             if msg.content and not isinstance(msg, HumanMessage):
                 # logger.debug(msg.content)
@@ -54,8 +63,11 @@ async def chat_with_llm(request: ChatRequest) -> StreamingResponse:
         StreamingResponse: The streaming response from the LLM.
     """
     try:
-        logger.debug("Received chat request with message: %s", request.message)
-        return StreamingResponse(stream_response(request.message), media_type="text/plain")
+        logger.debug(f"Received chat request with message: {request.message}, condition: {request.condition}")
+        return StreamingResponse(
+            stream_response(request.message, condition=request.condition), 
+            media_type="text/plain"
+        )
     except Exception as e:
         logger.error("Error in chat_with_llm endpoint: %s", str(e))
         raise HTTPException(status_code=500, detail=str(e))

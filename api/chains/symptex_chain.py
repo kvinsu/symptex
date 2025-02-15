@@ -28,11 +28,11 @@ logger.setLevel(logging.DEBUG)
 class CustomState(TypedDict):
     messages: Annotated[list[AnyMessage], add_messages]
     evaluations: Annotated[list[str], add]
+    condition: str
 
 
-PROMPT = ChatPromptTemplate.from_messages(
-    [
-        SystemMessagePromptTemplate.from_template(
+MEDICAL_CONDITIONS = {
+     "dementia":
             """
             Please act as a patient with a health issue, and you are now speaking with a doctor in german.
             Your goal is to act realistically as a patient based on the progression of your condition and your medical history.
@@ -49,11 +49,20 @@ PROMPT = ChatPromptTemplate.from_messages(
             Age: 82 years
             Medical history: Fell on your right side this morning and was brought to the hospital by ambulance.
             Relevant pre-existing conditions: Arterial hypertension, severe senile Alzheimer’s dementia, chronic kidney disease (stage G3A2), and bilateral varicosis.
-            """
-        ),
-        MessagesPlaceholder(variable_name="messages"),
-    ]
-)
+        """,
+    "presbycusis": """
+        Please act as a patient with a health issue, and you are now speaking with a doctor in german.
+        Your goal is to realistically portray a patient based on your condition and medical history.  
+        
+        You have the following characteristics:  
+        - Age: 72 years  
+        - Medical history: Age-related hearing loss (presbycusis) diagnosed several years ago  
+        - Current symptoms: Difficulty understanding speech, especially in noisy environments; frequently asking others to repeat themselves; occasional frustration due to hearing difficulties  
+        - Relevant pre-existing conditions: Mild hypertension (controlled with medication)  
+        - Current medication: Amlodipine 5mg daily  
+    """
+}
+        
 
 # Ensure environment variables are set
 OLLAMA_API_URL = os.environ.get("OLLAMA_API_URL")
@@ -68,6 +77,12 @@ llm = ChatOllama(
     temperature=0.5,
 )
 
+def get_prompt(condition: str = "dementia") -> ChatPromptTemplate:
+    return ChatPromptTemplate.from_messages([
+        SystemMessagePromptTemplate.from_template(MEDICAL_CONDITIONS[condition]),
+        MessagesPlaceholder(variable_name="messages"),
+    ])
+
 @ls.traceable(
     run_type="llm",
     name="Patient LLM Call Decorator",
@@ -75,7 +90,8 @@ llm = ChatOllama(
 )
 async def call_patient_model(state: CustomState):
     logger.debug("Calling patient model")
-    chain = PROMPT | llm
+    condition = state.get("condition", "dementia")
+    chain = get_prompt(condition) | llm
 
     try:
         # Invoke the chain
