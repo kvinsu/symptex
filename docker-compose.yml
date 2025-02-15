@@ -7,7 +7,7 @@ services:
         - ollama_models:/root/.ollama
       healthcheck:
         test: ["CMD", "ollama", "list"]
-        interval: 10s
+        interval: 5s
         timeout: 5s
         retries: 3
       # TODO Add deploy section to deploy service with GPU
