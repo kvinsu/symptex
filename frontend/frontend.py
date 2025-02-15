@@ -12,6 +12,16 @@ st.info(
     "Sprechen Sie hier mit dem zu behandelnden Patienten."
 )
 
+# Add condition selector
+if "condition" not in st.session_state:
+    st.session_state.condition = "dementia"
+
+st.sidebar.selectbox(
+    "Select Medical Condition",
+    options=["dementia", "presbycusis"],
+    key="condition"
+)
+
 # Initialize chat history
 if "messages" not in st.session_state:
     st.session_state.messages = []
@@ -31,7 +41,10 @@ if prompt := st.chat_input("Enter your question"):
     # Add user message to chat history
     st.session_state.messages.append({"role": "user", "output": prompt})
 
-    data = {"message": prompt}
+    data = {
+        "message": prompt,
+        "condition": st.session_state.condition,
+    }
 
     with st.spinner("Thinking..."):
         response_placeholder = st.chat_message("assistant").markdown("")
