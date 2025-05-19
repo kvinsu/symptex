@@ -5,7 +5,7 @@ from pydantic import BaseModel
 import logging
 from typing import AsyncGenerator
 
-from api.chains.symptex_chain import symptex_app
+from api.chains.symptex_chain import symptex_model
 
 logger = logging.getLogger('uvicorn.error')
 logger.setLevel(logging.DEBUG)
@@ -13,10 +13,10 @@ logger.setLevel(logging.DEBUG)
 router = APIRouter()
 
 
-# Input model
+# Custom input model
 class ChatRequest(BaseModel):
     message: str
-    condition: str = "dementia" # Default condition
+    condition: str = "default"
 
 async def stream_response(message: str, condition: str) -> AsyncGenerator[str, None]:
     """
@@ -34,11 +34,10 @@ async def stream_response(message: str, condition: str) -> AsyncGenerator[str, N
     logger.debug("Starting to stream response for message: %s", message)
 
     try:
-        async for msg, metadata in symptex_app.astream(
+        async for msg, metadata in symptex_model.astream(
             {
                 "messages": [HumanMessage(message)],
                 "condition": condition,
-                "evaluations": []
             },
             config, 
             stream_mode="messages"

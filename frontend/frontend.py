@@ -14,11 +14,11 @@ st.info(
 
 # Add condition selector
 if "condition" not in st.session_state:
-    st.session_state.condition = "dementia"
+    st.session_state.condition = "default"
 
 st.sidebar.selectbox(
     "Select Medical Condition",
-    options=["dementia", "presbycusis"],
+    options=["default", "young_patient", "Pseudotumor_cerebri_default", "leichte_Alzheimer_Disease", "schwere_Alzheimer_Disease"],
     key="condition"
 )
 

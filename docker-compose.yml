@@ -1,16 +1,16 @@
 services:
   ollama:
-      image: ollama/ollama
-      ports:
-        - "11434:11434"
-      volumes:
-        - ollama_models:/root/.ollama
-      healthcheck:
-        test: ["CMD", "ollama", "list"]
-        interval: 5s
-        timeout: 5s
-        retries: 3
-      # TODO Add deploy section to deploy service with GPU
+    image: ollama/ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_models:/root/.ollama
+    healthcheck:
+      test: ["CMD", "ollama", "list"]
+      interval: 5s
+      timeout: 5s
+      retries: 3
+    # TODO Add deploy section to deploy service with GPU
 
   api:
     build:
@@ -30,6 +30,15 @@ services:
     depends_on:
       - api
     restart: always
+
+  #test:
+  #  build:
+  #    context: ./api
+  #  command: pytest /app/api/tests
+  #  volumes:
+  #    - .:/app
+  #  depends_on:
+  #    - api
 
 volumes:
   ollama_models:

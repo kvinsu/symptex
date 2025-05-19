@@ -1,13 +1,8 @@
 import os
 from dotenv import load_dotenv
 
-from langchain_core.prompts import MessagesPlaceholder
 from langchain_core.messages import AnyMessage
 from langchain_ollama import ChatOllama
-from langchain.prompts import (
-    SystemMessagePromptTemplate,
-    ChatPromptTemplate,
-)
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.graph import START, StateGraph, END
 from langgraph.graph.message import add_messages
@@ -15,8 +10,9 @@ import langsmith as ls
 from typing import Annotated
 from typing_extensions import TypedDict
 from operator import add
-# from api.chains.evaluation.evaluator import evaluate_response_by_llm
 import logging
+
+from api.chains.prompts import PROMPTS
 
 # Load env variables for LangSmith to work
 load_dotenv()
@@ -27,43 +23,8 @@ logger.setLevel(logging.DEBUG)
 
 class CustomState(TypedDict):
     messages: Annotated[list[AnyMessage], add_messages]
-    evaluations: Annotated[list[str], add]
     condition: str
-
-
-MEDICAL_CONDITIONS = {
-     "dementia":
-            """
-            Please act as a patient with a health issue, and you are now speaking with a doctor in german.
-            Your goal is to act realistically as a patient based on the progression of your condition and your medical history.
-            Respond directly to the doctor’s questions without providing unnecessary details unless explicitly asked.
-            
-            Do not ask questions or respond to inquiries unrelated to your health, even if the doctor insists.
-            Respond like a human would, based on the condition and previous conversation. 
-            Never mention past medical conditions or your health history unless your symptoms or conditions warrant it.
-            If you do not know an answer, simply state that you do not know.
-            Answer step by step if necessary, and reflect confusion or emotion appropriate to the condition.
-            
-            You have the following characteristics:
-
-            Age: 82 years
-            Medical history: Fell on your right side this morning and was brought to the hospital by ambulance.
-            Relevant pre-existing conditions: Arterial hypertension, severe senile Alzheimer’s dementia, chronic kidney disease (stage G3A2), and bilateral varicosis.
-        """,
-    "presbycusis": """
-        Please act as a patient with a health issue, and you are now speaking with a doctor in german.
-        Your goal is to realistically portray a patient based on your condition and medical history.  
         
-        You have the following characteristics:  
-        - Age: 72 years  
-        - Medical history: Age-related hearing loss (presbycusis) diagnosed several years ago  
-        - Current symptoms: Difficulty understanding speech, especially in noisy environments; frequently asking others to repeat themselves; occasional frustration due to hearing difficulties  
-        - Relevant pre-existing conditions: Mild hypertension (controlled with medication)  
-        - Current medication: Amlodipine 5mg daily  
-    """
-}
-        
-
 # Ensure environment variables are set
 OLLAMA_API_URL = os.environ.get("OLLAMA_API_URL")
 if not OLLAMA_API_URL:
@@ -73,39 +34,33 @@ if not OLLAMA_API_URL:
 llm = ChatOllama(
     base_url=OLLAMA_API_URL,
     # Change model and temperature here
-    model="llama3.1",
+    model="phi4-mini",
     temperature=0.5,
 )
-
-def get_prompt(condition: str = "dementia") -> ChatPromptTemplate:
-    return ChatPromptTemplate.from_messages([
-        SystemMessagePromptTemplate.from_template(MEDICAL_CONDITIONS[condition]),
-        MessagesPlaceholder(variable_name="messages"),
-    ])
 
 @ls.traceable(
     run_type="llm",
     name="Patient LLM Call Decorator",
-    metadata={"model": "llama3.1", "temperature": 0.5},
+    metadata={"model": "phi4-mini", "temperature": 0.5},
 )
 async def call_patient_model(state: CustomState):
-    logger.debug("Calling patient model")
-    condition = state.get("condition", "dementia")
-    chain = get_prompt(condition) | llm
+    prompt_id = state.get("condition")
+    logger.debug("Calling patient model with prompt_id: {prompt_id}")
+
+    if prompt_id not in PROMPTS:
+        logger.error("Prompt ID not found: %s", prompt_id)
+        raise ValueError(f"Prompt ID {prompt_id} not found")
+    
+    # Get the prompt
+    prompt = PROMPTS[prompt_id]
+    chain = prompt | llm
 
     try:
         # Invoke the chain
         response = await chain.ainvoke(state)
         logger.debug("Received response from patient model")
-        
-        # Evaluate response
-        # evaluation = await evaluate_response_by_llm(state, response)
-        evaluation = '' # TODO
 
-        # Save the evaluation in the state
-        state["evaluations"].append(evaluation)
-
-        return {"messages": response, "evaluations": state["evaluations"]}
+        return {"messages": response}
     except Exception as e:
         logger.error("Error calling patient model: %s", str(e))
         raise
@@ -124,4 +79,4 @@ workflow.add_edge("patient_model", END)
 memory = MemorySaver()
 
 # Compile into LangChain runnable
-symptex_app = workflow.compile(checkpointer=memory)
+symptex_model = workflow.compile(checkpointer=memory)
