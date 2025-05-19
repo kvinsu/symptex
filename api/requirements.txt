@@ -8,3 +8,5 @@ langserve
 sse-starlette
 python-dotenv
 requests
+pytest
+pytest-asyncio

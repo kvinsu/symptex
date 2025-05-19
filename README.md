@@ -1,12 +1,12 @@
 # Symptex
 
-A chatbot designed for medical students, simulating doctor-patient interactions with the goal of improving the user's
+A chatbot designed for medical students, simulating doctor-patient interactions with the goal of improving the user's medical
 history-taking skills.
 
 ## Prerequisites
 
-* [Docker](https://docs.docker.com/get-started/get-docker/)
-* Browser of your choice to interact with the chatbot
+- [Docker](https://docs.docker.com/get-started/get-docker/)
+- Browser of your choice to interact with the chatbot
 
 ## Getting Started
 
@@ -18,9 +18,9 @@ Note: The first prompt/API call usually takes a while, since the model needs to 
 
 ## Endpoints
 
-* Streamlit frontend: <http://localhost:8501>
-* API: <http://localhost:8000>
-* Ollama: <http://localhost:11434>
+- Streamlit frontend: <http://localhost:8501>
+- API: <http://localhost:8000>
+- Ollama: <http://localhost:11434>
 
 ## Project Structure
 
@@ -37,7 +37,9 @@ symptex/
 │   │
 │   ├── chains/                   # Chain logic
 │   │   ├── __init__.py
-│   │   └── symptex_chain.py      # Definition of chain
+│   │   ├── symptex_chain.py      # Definition of chain
+│   │   ├── prompts.py            # Definition of behavior prompts
+│   │   └── patient_data.py       # Definition of patients
 │   │
 │   ├── requirements.txt          # Dependencies for LangChain API
 │   └── Dockerfile                # Dockerfile for LangChain API
