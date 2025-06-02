@@ -1,10 +1,11 @@
-from fastapi import APIRouter, HTTPException
-from fastapi.responses import StreamingResponse
+from fastapi import APIRouter
+from fastapi.responses import StreamingResponse, PlainTextResponse
 from langchain_core.messages import HumanMessage
 from pydantic import BaseModel
 import logging
 from typing import AsyncGenerator
 
+from api.chains.prompts import PROMPTS
 from api.chains.symptex_chain import symptex_model
 
 logger = logging.getLogger('uvicorn.error')
@@ -61,12 +62,22 @@ async def chat_with_llm(request: ChatRequest) -> StreamingResponse:
     Returns:
         StreamingResponse: The streaming response from the LLM.
     """
+   
+    # Check for valid condition BEFORE starting the stream
+    if request.condition not in PROMPTS:
+        logger.error("Prompt ID not found: %s", request.condition)
+        return PlainTextResponse(f"Prompt ID {request.condition} not found", status_code=400)
+    
     try:
         logger.debug(f"Received chat request with message: {request.message}, condition: {request.condition}")
         return StreamingResponse(
             stream_response(request.message, condition=request.condition), 
             media_type="text/plain"
         )
+    except ValueError as e:
+        # Handle invalid condition or other validation errors
+        logger.error("Error in chat_with_llm endpoint: %s", str(e))
+        return PlainTextResponse(str(e), status_code=400)
     except Exception as e:
         logger.error("Error in chat_with_llm endpoint: %s", str(e))
-        raise HTTPException(status_code=500, detail=str(e))
+        return PlainTextResponse("Internal server error", status_code=500)
