@@ -10,7 +10,14 @@ services:
       interval: 5s
       timeout: 5s
       retries: 3
-    # TODO Add deploy section to deploy service with GPU
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    runtime: nvidia
 
   api:
     build:

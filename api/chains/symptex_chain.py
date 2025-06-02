@@ -34,14 +34,16 @@ if not OLLAMA_API_URL:
 llm = ChatOllama(
     base_url=OLLAMA_API_URL,
     # Change model and temperature here
-    model="phi4-mini",
+    #model="gemma3:12b",
+    model="llama3.1:8b",
     temperature=0.5,
+    num_ctx=32768,
 )
 
 @ls.traceable(
     run_type="llm",
     name="Patient LLM Call Decorator",
-    metadata={"model": "phi4-mini", "temperature": 0.5},
+    metadata={"model": "llama3.1:8b", "temperature": 0.5},
 )
 async def call_patient_model(state: CustomState):
     prompt_id = state.get("condition")
