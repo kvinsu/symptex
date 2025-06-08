@@ -5,6 +5,8 @@ from pydantic import BaseModel
 import logging
 from typing import AsyncGenerator
 
+from starlette.responses import PlainTextResponse, StreamingResponse
+
 from api.chains.prompts import PROMPTS
 from api.chains.symptex_chain import symptex_model
 
@@ -52,7 +54,7 @@ async def stream_response(message: str, condition: str) -> AsyncGenerator[str, N
         raise
 
 @router.post("/chat")
-async def chat_with_llm(request: ChatRequest) -> StreamingResponse:
+async def chat_with_llm(request: ChatRequest) -> PlainTextResponse | StreamingResponse:
     """
     Endpoint to chat with the LLM.
 
