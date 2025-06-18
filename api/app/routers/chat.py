@@ -4,12 +4,13 @@ from langchain_core.messages import HumanMessage
 from pydantic import BaseModel
 import logging
 from typing import AsyncGenerator
+from api.chains.symptex_chain import memory
 
 from starlette.responses import PlainTextResponse, StreamingResponse
 
-from api.chains.prompts import PROMPTS
 from api.chains.symptex_chain import symptex_model
 
+# Set up logging
 logger = logging.getLogger('uvicorn.error')
 logger.setLevel(logging.DEBUG)
 
@@ -19,28 +20,72 @@ router = APIRouter()
 # Custom input model
 class ChatRequest(BaseModel):
     message: str
-    condition: str = "default"
+    model: str
+    condition: str
+    talkativeness: str
+    thread_id: str
 
-async def stream_response(message: str, condition: str) -> AsyncGenerator[str, None]:
+@router.post("/chat")
+async def chat_with_llm(request: ChatRequest):
+    """
+    Endpoint to chat with the LLM.
+    """
+    logger.debug("Received chat request: %s", request)
+   
+    # Validate message, condition and talkativeness BEFORE starting the stream
+    if not request.message:
+        logger.error("Empty message received")
+        raise PlainTextResponse("Message cannot be empty", status_code=400)
+    if request.model not in ["gemma-3-27b-it", "llama-3.3-70b-instruct", "llama-3.1-sauerkrautlm-70b-instruct", "qwq-32b", "mistral-large-instruct", "qwen3-235b-a22b"]:
+        logger.error("Invalid model: %s", request.model)
+        raise PlainTextResponse(f"Invalid model: {request.model}", status_code=400)
+    if request.condition not in ["alzheimer", "schwerhörig", "verdrängung"]:
+        logger.error("Invalid condition: %s", request.condition)
+        raise PlainTextResponse(f"Invalid condition: {request.condition}", status_code=400)
+    if request.talkativeness not in ["kurz angebunden", "ausgewogen", "ausschweifend"]:
+        logger.error("Invalid talkativeness: %s", request.talkativeness)
+        raise PlainTextResponse(f"Invalid talkativeness: {request.talkativeness}", status_code=400)
+        
+    try:
+        return StreamingResponse(
+            stream_response(
+                message=request.message, 
+                model=request.model, 
+                condition=request.condition, 
+                talkativeness=request.talkativeness,
+                thread_id=request.thread_id
+            ), 
+            media_type="text/plain"
+        )
+    except Exception as e:
+        logger.error("Error in chat_with_llm endpoint: %s", str(e))
+        return PlainTextResponse("Internal server error", status_code=500)
+
+async def stream_response(message: str, model: str, condition: str, talkativeness: str, thread_id: str) -> AsyncGenerator[str, None]:
     """
     Stream responses from the symptex_app.
 
     Args:
         message (str): The input message from the user.
+        model (str): The model to use for generating the response.
         condition (str): The medical condition to simulate.
+        talkativeness (str): The level of talkativeness for the response.
+        history (List[Dict]): The chat history to maintain context.
+        thread_id (str): The ID of the chat thread.
 
-    Yields:
+    Returns:
         str: The response message from the LLM.
     """
-    # TODO thread_id for each session
-    config = {"configurable": {"thread_id": "1"}}
+    config = {"configurable": {"thread_id": thread_id}}
     logger.debug("Starting to stream response for message: %s", message)
 
     try:
         async for msg, metadata in symptex_model.astream(
             {
                 "messages": [HumanMessage(message)],
+                "model": model,
                 "condition": condition,
+                "talkativeness": talkativeness,
             },
             config, 
             stream_mode="messages"
@@ -52,34 +97,3 @@ async def stream_response(message: str, condition: str) -> AsyncGenerator[str, N
     except Exception as e:
         logger.error("Error while streaming response: %s", str(e))
         raise
-
-@router.post("/chat")
-async def chat_with_llm(request: ChatRequest) -> PlainTextResponse | StreamingResponse:
-    """
-    Endpoint to chat with the LLM.
-
-    Args:
-        request (ChatRequest): The request containing the user's message.
-
-    Returns:
-        StreamingResponse: The streaming response from the LLM.
-    """
-   
-    # Check for valid condition BEFORE starting the stream
-    if request.condition not in PROMPTS:
-        logger.error("Prompt ID not found: %s", request.condition)
-        return PlainTextResponse(f"Prompt ID {request.condition} not found", status_code=400)
-    
-    try:
-        logger.debug(f"Received chat request with message: {request.message}, condition: {request.condition}")
-        return StreamingResponse(
-            stream_response(request.message, condition=request.condition), 
-            media_type="text/plain"
-        )
-    except ValueError as e:
-        # Handle invalid condition or other validation errors
-        logger.error("Error in chat_with_llm endpoint: %s", str(e))
-        return PlainTextResponse(str(e), status_code=400)
-    except Exception as e:
-        logger.error("Error in chat_with_llm endpoint: %s", str(e))
-        return PlainTextResponse("Internal server error", status_code=500)

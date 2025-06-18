@@ -1,5 +1,5 @@
 langchain
-langchain-ollama == 0.2.0
+langchain-openai
 langgraph
 langsmith
 fastapi
