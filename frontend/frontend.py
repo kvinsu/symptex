@@ -2,7 +2,7 @@ import requests
 import streamlit as st
 import logging
 
-API_URL = "http://host.docker.internal:8000/api/v1/chat"
+API_URL = "http://host.docker.internal:8000/api/v1"
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -12,14 +12,28 @@ st.info(
     "Sprechen Sie hier mit dem zu behandelnden Patienten."
 )
 
-# Add condition selector
+# Initialize session state for model, condition, and talkativeness
 if "condition" not in st.session_state:
-    st.session_state.condition = "default"
+    st.session_state.model = "gemma-3-27b-it"
+    st.session_state.condition = "alzheimer"
+    st.session_state.talkativeness = "kurz angebunden"
+    st.session_state.thread_id = str(1) # TODO
 
+# Define sidebar options
 st.sidebar.selectbox(
-    "Select Medical Condition",
-    options=["default", "young_patient", "Pseudotumor_cerebri_default", "leichte_Alzheimer_Disease", "schwere_Alzheimer_Disease"],
+    "Modell",
+    options=["gemma-3-27b-it", "llama-3.3-70b-instruct", "llama-3.1-sauerkrautlm-70b-instruct", "qwq-32b", "mistral-large-instruct", "qwen3-235b-a22b"],
+    key="model"
+)
+st.sidebar.selectbox(
+    "Patientenrolle",
+    options=["alzheimer", "schwerhörig", "verdrängung"],
     key="condition"
+)
+st.sidebar.selectbox(
+    "Gesprächsverhalten",
+    options=["kurz angebunden", "ausgewogen", "ausschweifend"],
+    key="talkativeness"
 )
 
 # Initialize chat history
@@ -43,13 +57,16 @@ if prompt := st.chat_input("Enter your question"):
 
     data = {
         "message": prompt,
+        "model": st.session_state.model,
         "condition": st.session_state.condition,
+        "talkativeness": st.session_state.talkativeness,
+        "thread_id": st.session_state.thread_id
     }
 
     with st.spinner("Thinking..."):
         response_placeholder = st.chat_message("assistant").markdown("")
 
-        with requests.post(API_URL, json=data, stream=True) as response:
+        with requests.post(API_URL + "/chat", json=data, stream=True) as response:
             if response.status_code == 200:
                 streamed_text = ""
                 for chunk in response.iter_content(chunk_size=None):
