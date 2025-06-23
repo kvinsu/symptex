@@ -1,6 +1,7 @@
 import requests
 import streamlit as st
 import logging
+import uuid
 
 API_URL = "http://host.docker.internal:8000/api/v1"
 
@@ -17,7 +18,8 @@ if "condition" not in st.session_state:
     st.session_state.model = "gemma-3-27b-it"
     st.session_state.condition = "alzheimer"
     st.session_state.talkativeness = "kurz angebunden"
-    st.session_state.thread_id = str(1) # TODO
+    st.session_state.thread_id = str(uuid.uuid4())
+
 
 # Define sidebar options
 st.sidebar.selectbox(
@@ -27,7 +29,7 @@ st.sidebar.selectbox(
 )
 st.sidebar.selectbox(
     "Patientenrolle",
-    options=["alzheimer", "schwerhörig", "verdrängung"],
+    options=["default", "alzheimer", "schwerhörig", "verdrängung"],
     key="condition"
 )
 st.sidebar.selectbox(
@@ -35,6 +37,22 @@ st.sidebar.selectbox(
     options=["kurz angebunden", "ausgewogen", "ausschweifend"],
     key="talkativeness"
 )
+
+# Add a reset button to the sidebar
+if st.sidebar.button("Chat zurücksetzen", use_container_width=True):
+    try:
+        # Clear backend memory for this thread
+        response = requests.post(f"{API_URL}/reset/{st.session_state.thread_id}")
+        if response.status_code == 200:
+            # Generate new thread ID
+            st.session_state.thread_id = str(uuid.uuid4())
+            # Clear frontend messages
+            st.session_state.messages = []
+            st.rerun()
+        else:
+            st.error("Error resetting chat memory")
+    except Exception as e:
+        st.error(f"Could not reset chat memory: {str(e)}")
 
 # Initialize chat history
 if "messages" not in st.session_state:
