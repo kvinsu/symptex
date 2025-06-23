@@ -39,7 +39,7 @@ async def chat_with_llm(request: ChatRequest):
     if request.model not in ["gemma-3-27b-it", "llama-3.3-70b-instruct", "llama-3.1-sauerkrautlm-70b-instruct", "qwq-32b", "mistral-large-instruct", "qwen3-235b-a22b"]:
         logger.error("Invalid model: %s", request.model)
         raise PlainTextResponse(f"Invalid model: {request.model}", status_code=400)
-    if request.condition not in ["alzheimer", "schwerhörig", "verdrängung"]:
+    if request.condition not in ["default", "alzheimer", "schwerhörig", "verdrängung"]:
         logger.error("Invalid condition: %s", request.condition)
         raise PlainTextResponse(f"Invalid condition: {request.condition}", status_code=400)
     if request.talkativeness not in ["kurz angebunden", "ausgewogen", "ausschweifend"]:
@@ -60,6 +60,19 @@ async def chat_with_llm(request: ChatRequest):
     except Exception as e:
         logger.error("Error in chat_with_llm endpoint: %s", str(e))
         return PlainTextResponse("Internal server error", status_code=500)
+    
+# Add reset endpoint
+@router.post("/reset/{thread_id}")
+async def reset_memory(thread_id: str):
+    """Reset the LangChain memory for a specific thread"""
+    try:
+        # Delete thread from memory
+        memory.delete_thread(thread_id)
+        return PlainTextResponse(f"Chat memory cleared for thread {thread_id}", status_code=200)
+    except Exception as e:
+        logger.error(f"Error clearing memory for thread {thread_id}: {str(e)}")
+        return PlainTextResponse("Error clearing chat memory", status_code=500)
+
 
 async def stream_response(message: str, model: str, condition: str, talkativeness: str, thread_id: str) -> AsyncGenerator[str, None]:
     """

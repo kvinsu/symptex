@@ -41,7 +41,7 @@ def get_llm(model: str) -> ChatOpenAI:
         model=model,
         temperature=0.7,
         top_p=0.8,
-        max_tokens=1024,
+        #max_tokens=1024,
         max_retries=2,
     )
 
