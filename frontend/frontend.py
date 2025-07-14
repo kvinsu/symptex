@@ -54,6 +54,39 @@ if st.sidebar.button("Chat zurücksetzen", use_container_width=True):
     except Exception as e:
         st.error(f"Could not reset chat memory: {str(e)}")
 
+# Add a button to rate the chat
+if st.sidebar.button("Chat bewerten", use_container_width=True):
+    if st.session_state.messages:
+        with st.spinner("Bewertung wird erstellt..."):
+                try:
+                    # Add a visual break in the chat
+                    st.session_state.messages.append({
+                        "role": "user",
+                        "output": "_Bewertung angefordert..._"
+                    })
+                    
+                    # Get the rating
+                    messages = [
+                        {"role": msg["role"], "output": msg["output"]}
+                        for msg in st.session_state.messages[:-1]  # Exclude the "Bewertung angefordert" message
+                    ]
+                    
+                    response = requests.post(f"{API_URL}/rate", json={"messages": messages})
+                    if response.status_code == 200:
+                        rating = response.json().get("rating")
+                        # Add the rating as an assistant message
+                        st.session_state.messages.append({
+                            "role": "assistant",
+                            "output": rating
+                        })
+                        st.rerun()  # Refresh to show new messages
+                    else:
+                        st.error("Error rating chat")
+                except Exception as e:
+                    st.error(f"Could not rate chat: {str(e)}")
+    else:
+        st.warning("Der Chat enthält noch keine Nachrichten zur Bewertung.")
+
 # Initialize chat history
 if "messages" not in st.session_state:
     st.session_state.messages = []
