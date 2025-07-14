@@ -9,6 +9,7 @@ from api.chains.symptex_chain import memory
 from starlette.responses import PlainTextResponse, StreamingResponse
 
 from api.chains.symptex_chain import symptex_model
+from api.chains.eval_chain import rate_history
 
 # Set up logging
 logger = logging.getLogger('uvicorn.error')
@@ -24,6 +25,10 @@ class ChatRequest(BaseModel):
     condition: str
     talkativeness: str
     thread_id: str
+
+class RateRequest(BaseModel):
+    # List of dicts with 'role' and 'output'
+    messages: list
 
 @router.post("/chat")
 async def chat_with_llm(request: ChatRequest):
@@ -72,6 +77,20 @@ async def reset_memory(thread_id: str):
     except Exception as e:
         logger.error(f"Error clearing memory for thread {thread_id}: {str(e)}")
         return PlainTextResponse("Error clearing chat memory", status_code=500)
+    
+# Add rating endpoint
+@router.post("/rate")
+async def rate_chat(request: RateRequest):
+    # Convert frontend messages to LangChain messages
+    from langchain_core.messages import HumanMessage, AIMessage
+    lc_messages = []
+    for msg in request.messages:
+        if msg["role"] == "user":
+            lc_messages.append(HumanMessage(content=msg["output"]))
+        elif msg["role"] == "assistant":
+            lc_messages.append(AIMessage(content=msg["output"]))
+    result = await rate_history(lc_messages)
+    return {"rating": result.content}
 
 
 async def stream_response(message: str, model: str, condition: str, talkativeness: str, thread_id: str) -> AsyncGenerator[str, None]:
