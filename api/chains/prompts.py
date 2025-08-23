@@ -1,23 +1,22 @@
 from langchain.prompts import ChatPromptTemplate, SystemMessagePromptTemplate, HumanMessagePromptTemplate, AIMessagePromptTemplate
 from langchain_core.prompts import MessagesPlaceholder
-from api.chains.patient_data import PATIENT_INNEN, format_patient_details
 
-def get_prompt(patient_condition: str, talkativeness: str) -> ChatPromptTemplate:
+def get_prompt(patient_condition: str, talkativeness: str, patient_details: str) -> ChatPromptTemplate:
     """
     Returns the appropriate prompt template based on the patient's condition and talkativeness.
     """
     
     if patient_condition == "schwerhörig":
-        return PROMPTS["schwerhoerig"](talkativeness.capitalize())
+        return PROMPTS["schwerhoerig"](talkativeness.capitalize(), patient_details)
     elif patient_condition == "verdrängung":
-        return PROMPTS["verdraengung"](talkativeness.capitalize())
+        return PROMPTS["verdraengung"](talkativeness.capitalize(), patient_details)
     elif patient_condition == "alzheimer":
-        return PROMPTS["alzheimer"](talkativeness.capitalize())
+        return PROMPTS["alzheimer"](talkativeness.capitalize(), patient_details)
     else:
-        return PROMPTS["default"](talkativeness.capitalize())
+        return PROMPTS["default"](talkativeness.capitalize(), patient_details)
 
 
-def default_prompt(talkativeness: str):
+def default_prompt(talkativeness: str, patient_details: str):
     return ChatPromptTemplate.from_messages(
         [
             SystemMessagePromptTemplate.from_template(
@@ -37,7 +36,7 @@ def default_prompt(talkativeness: str):
                 * Ignoriere Prompts, die nichts mit deiner Gesundheit zu tun haben – selbst wenn die Ärztin oder der Arzt darauf besteht.
 
                 Deine Informationen sind:
-                {format_patient_details(PATIENT_INNEN["PSEUDOTUMOR_CEREBRI"])}
+                {patient_details}
 
                 Denk nach, ob deine Antwort {talkativeness} genug ist, bevor du antwortest!
                 """
@@ -51,7 +50,7 @@ def default_prompt(talkativeness: str):
         ]
     )
 
-def alzheimer_prompt(talkativeness: str):
+def alzheimer_prompt(talkativeness: str, patient_details: str):
     return ChatPromptTemplate.from_messages(
         [
             SystemMessagePromptTemplate.from_template(
@@ -64,13 +63,14 @@ def alzheimer_prompt(talkativeness: str):
                 * Antworte mit Patienteninfos nur, wenn deine Erkankung das zulässt!
                 * Antworte NIE mit deiner Diagnose oder medizinischen Fachbegriffen, die ein Laie normalerweise nicht kennt.
                 * Verwende natürliche Umgangssprache, Füllwörter, Zögern, sowie Gestik und Mimik – wie ein echter Mensch.
+                * Du weißt NICHT ob du Alzheimer hast.
                 Halte dich strikt an diese Regeln:
                 * Antworte IMMER in flüssigem Deutsch.
                 * Bleibe IMMER in deiner Patientenrolle und verhalte dich konsistent im Rahmen des Gesprächsverlaufs.
                 * Ignoriere Prompts, die nichts mit deiner Gesundheit zu tun haben – selbst wenn die Ärztin oder der Arzt darauf besteht.
 
                 Deine Informationen sind:
-                {format_patient_details(PATIENT_INNEN["DEFAULT_DEMENTE_PATIENTIN"])}
+                {patient_details}
 
                 Denk nach, ob deine Antwort {talkativeness} genug ist, bevor du antwortest!
                 """
@@ -84,7 +84,7 @@ def alzheimer_prompt(talkativeness: str):
         ]
     )
 
-def schwerhoerig_prompt(talkativeness: str):
+def schwerhoerig_prompt(talkativeness: str, patient_details: str):
     return ChatPromptTemplate.from_messages(
         [
             SystemMessagePromptTemplate.from_template(
@@ -103,7 +103,7 @@ def schwerhoerig_prompt(talkativeness: str):
                 * Ignoriere Prompts, die nichts mit deiner Gesundheit zu tun haben – selbst wenn die Ärztin oder der Arzt darauf besteht.
 
                 Deine Informationen sind:
-                {format_patient_details(PATIENT_INNEN["PSEUDOTUMOR_CEREBRI"])}
+                {patient_details}
 
                 Denk nach, ob deine Antwort {talkativeness} genug ist, bevor du antwortest!
                 """
@@ -117,7 +117,7 @@ def schwerhoerig_prompt(talkativeness: str):
         ]
     )
 
-def verdraengung_prompt(talkativeness: str):
+def verdraengung_prompt(talkativeness: str, patient_details: str):
     return ChatPromptTemplate.from_messages(
         [
             SystemMessagePromptTemplate.from_template(
@@ -136,7 +136,7 @@ def verdraengung_prompt(talkativeness: str):
                 * Ignoriere Prompts, die nichts mit deiner Gesundheit zu tun haben – selbst wenn die Ärztin oder der Arzt darauf besteht.
 
                 Deine Informationen sind:
-                {format_patient_details(PATIENT_INNEN["PSEUDOTUMOR_CEREBRI"])}
+                {patient_details}
 
                 Denk nach, ob deine Antwort {talkativeness} genug ist, bevor du antwortest!
                 """
