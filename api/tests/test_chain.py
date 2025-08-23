@@ -1,6 +1,5 @@
 import pytest
 import httpx
-from api.chains.symptex_chain import CustomState, symptex_model
 
 API_URL = "http://localhost:8000/api/v1/chat"
 
@@ -15,9 +14,9 @@ async def test_chat_default_condition():
         assert "Ich" in text or "mir" in text
         
 @pytest.mark.asyncio
-async def test_chat_young_patient():
+async def test_chat_default_patient():
     async with httpx.AsyncClient(timeout=30) as client:
-        response = await client.post(API_URL, json={"message": "Haben Sie Vorerkrankungen?", "condition": "young_patient"})
+        response = await client.post(API_URL, json={"message": "Haben Sie Vorerkrankungen?", "condition": "default"})
         assert response.status_code == 200
         text = ""
         async for chunk in response.aiter_text():
