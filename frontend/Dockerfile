@@ -7,5 +7,6 @@ COPY requirements.txt requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY frontend.py frontend.py
+COPY assets/ assets/
 
 CMD ["streamlit", "run", "frontend.py", "--server.port=8501", "--logger.level=debug"]
