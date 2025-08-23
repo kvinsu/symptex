@@ -29,7 +29,7 @@ def init_session_state() -> None:
         st.session_state.model = "qwen3-235b-a22b"
         st.session_state.condition = "alzheimer"
         st.session_state.talkativeness = "kurz angebunden"
-        st.session_state.session_id = int(uuid.uuid4())
+        st.session_state.session_id = str(uuid.uuid4())
     if "messages" not in st.session_state:
         st.session_state.messages = []
 
@@ -103,11 +103,11 @@ def setup_sidebar() -> None:
 def handle_chat_reset() -> None:
     """Handle chat reset functionality"""
     try:
-        # Send request to clear backend memory for this session
+        # Send request to clear db for this session
         response = requests.post(f"{API_URL}/reset/{st.session_state.session_id}")
         if response.status_code == 200:
             # Generate new session ID
-            st.session_state.session_id = int(uuid.uuid4())
+            st.session_state.session_id = str(uuid.uuid4())
             # Clear frontend messages
             st.session_state.messages = []
             st.rerun()
@@ -207,16 +207,16 @@ def main() -> None:
             "condition": st.session_state.condition,
             "talkativeness": st.session_state.talkativeness,
             "patient_file_id": 3, # Anna Zank
-            "session_id": 1
+            "session_id": st.session_state.session_id
         }
 
         with st.spinner("Denkt nach..."):
-            response_placeholder = st.chat_message("patient").markdown("")
+            response_placeholder = st.chat_message("assistant").markdown("")
             with requests.post(API_URL + "/chat", json=data, stream=True) as response:
                 if response.status_code == 200:
                     streamed_text = process_llm_response(response, response_placeholder)
                     st.session_state.messages.append({
-                        "role": "patient",
+                        "role": "assistant",
                         "output": streamed_text,
                     })
                 else:

@@ -4,7 +4,7 @@ from langchain_core.messages import HumanMessage, AIMessage
 from pydantic import BaseModel
 import logging
 from typing import AsyncGenerator
-from chains.chat_chain import symptex_model, memory
+from chains.chat_chain import symptex_model
 from chains.eval_chain import eval_history
 from chains.formatting import format_patient_details
 
@@ -26,7 +26,7 @@ class ChatRequest(BaseModel):
     condition: str
     talkativeness: str
     patient_file_id: int
-    session_id: int
+    session_id: str
 
 # Rate request schema
 class RateRequest(BaseModel):
@@ -134,15 +134,21 @@ async def chat_with_llm(request: ChatRequest, db: Session = Depends(get_db)):
     
 # Reset endpoint
 @router.post("/reset/{session_id}")
-async def reset_memory(session_id: str):
+async def reset_memory(session_id: str, db: Session = Depends(get_db)):
     """Reset the LangChain memory for a specific session"""
     try:
-        # Delete session from memory
-        memory.delete_session(session_id)
-        return PlainTextResponse(f"Chat memory cleared for session {session_id}", status_code=200)
+        # Delete messages from db
+        db.query(ChatMessage).filter(ChatMessage.session_id == session_id).delete()
+        # Delete the session itself
+        db.query(ChatSession).filter(ChatSession.id == session_id).delete()
+        db.commit()
+        return PlainTextResponse(f"Chat data deleted for session {session_id}", status_code=200)
     except Exception as e:
-        logger.error(f"Error clearing memory for session {session_id}: {str(e)}")
-        return PlainTextResponse("Error clearing chat memory", status_code=500)
+        logger.error(f"Error deleting session {session_id}: {str(e)}")
+        db.rollback()
+        return PlainTextResponse("Error deleting session", status_code=500)
+    finally:
+        db.close()
     
 # Evaluation endpoint
 @router.post("/eval")
@@ -201,7 +207,6 @@ async def stream_response(
     Returns:
         str: The response message from the LLM.
     """
-    config = {"configurable": {"thread_id": session_id}}
     logger.debug("Starting to stream response for message: %s", message)
 
     try:
@@ -213,7 +218,6 @@ async def stream_response(
                 "talkativeness": talkativeness,
                 "patient_details": patient_details,
             },
-            config, 
             stream_mode="messages"
         ):
             # Get AIMessageChunks only

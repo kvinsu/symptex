@@ -3,7 +3,6 @@ from dotenv import load_dotenv
 
 from langchain_core.messages import AnyMessage
 from langchain_openai import ChatOpenAI
-from langgraph.checkpoint.memory import InMemorySaver
 from langgraph.graph import START, StateGraph, END
 from langgraph.graph.message import add_messages
 import langsmith as ls
@@ -90,8 +89,5 @@ workflow.add_node("patient_model", call_patient_model)
 workflow.add_edge(START, "patient_model")
 workflow.add_edge("patient_model", END)
 
-# Add memory
-memory = InMemorySaver()
-
 # Compile into LangChain runnable
-symptex_model = workflow.compile(checkpointer=memory)
+symptex_model = workflow.compile()
