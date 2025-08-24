@@ -44,51 +44,6 @@ PATIENT_INNEN = {
         }
     },
 
-    "SCHWER_DEMENTE_PATIENTIN": {
-        "name": "Anna Zank",
-        "alter": "89 Jahre",
-        "geburtsdatum": "01.09.1935",
-        "ethnie": "kaukasisch",
-        "bmi": "20,5",
-
-        "krankheitsverlauf": """
-        Heute morgen auf die rechte Seite gestürzt, mit dem RTW in die Klinik geliefert
-        """,
-
-        "vorerkrankungen": [
-            "Art. Hypertonie",
-            "ausgeprägte senile Alzheimer Demenz",
-            "chronische Niereninsuffizienz G3A2",
-            "Varikosis bds.",
-            "Z.n. offene Appendektomie (im Alter von 21 Jahren)"
-        ],
-
-        "dauermedikation": {
-            "Ramipril": "5mg p.o. 1-0-1",
-            "Amlodipin": "5mg p.o. 1-0-1",
-            "Donepezil": "10mg p.o. 0-0-1",
-            "Vitamin D": "10.000 IE 1x /Woche"
-        },
-
-        "allergien": "keine",
-
-        "familienanamnese": {
-            "vater": "verstorben an Prostata-CA",
-            "mutter": "Diabetes Typ II ab 55 Jahren"
-        },
-
-        "kardiovaskuläre_risikofaktoren": [
-            "Art. Hypertonie",
-            "kein Alkohol- oder Nikotinabusus"
-        ],
-
-        "sozial_berufsanamnese": {
-            "beruf": "pensioniert, war Lehrerin",
-            "familienstand": "verheiratet",
-            "kinder": "2 Töchter"
-        }
-    },
-
     "PSEUDOTUMOR_CEREBRI": {
         "name": "Maria Meier",
         "alter": "42 Jahre",
