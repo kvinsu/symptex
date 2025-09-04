@@ -6,21 +6,37 @@ history-taking skills.
 ## Prerequisites
 
 - [Docker](https://docs.docker.com/get-started/get-docker/)
-- Browser of your choice to interact with the chatbot
+- Running ILuVI PostgreSQL database (see ILuVI repository)
+- Browser of your choice to interact with Symptex
 
 ## Getting Started
 
-1. Run `docker compose up --build` in the project's root directory.
-2. In another terminal, execute `docker compose exec ollama ollama pull llama3.1` to pull (download) the LLM. Depending on the internet connection as well as the model's size, this may take some time, but is only required once.
-3. Interact with the Symptex chatbot locally through [Streamlit frontend URL](http://localhost:8501).
+1. In the `api/chains/` folder, create an `.env` file to define and store the following required (sensitive) keys:
 
-Note: The first prompt/API call usually takes a while, since the model needs to be loaded into the memory first.
+```env
+CHATAI_API_URL=https://chat-ai.academiccloud.de/v1
+CHATAI_API_KEY=insert_api_key
+# For testing, optional:
+LANGCHAIN_TRACING_V2=true
+LANGCHAIN_API_KEY=insert_langsmith_key
+```
+
+2. Run `docker compose up --build` in the project's root directory.
+3. Interact with Symptex locally through [Streamlit frontend URL](http://localhost:8501).
 
 ## Endpoints
 
 - Streamlit frontend: <http://localhost:8501>
 - API: <http://localhost:8000>
-- Ollama: <http://localhost:11434>
+
+## Features
+
+- Simulation of multiple patient conditions in the context of medical history-taking: default, alzheimer, schwerhörig (hearing impairment), verdrängung (denial of symptoms)
+- Configurable patient talkativeness levels/verbosity: kurz angebunden, ausgewogen, ausschweifend
+- Provision of performance feedback for increased pedagogical value
+- Multiple LLM models supported (see [KISSKI ChatAI models](https://docs.hpc.gwdg.de/services/saia/index.html))
+- Chat session management through ILuVI PostgreSQL database
+- ILuVI Patient file integration
 
 ## Project Structure
 
@@ -29,26 +45,31 @@ symptex/
 │
 ├── api/
 │   ├── app/                      # API logic
-│   │   ├── __init__.py
 │   │   ├── main.py               # FastAPI entry point
+│   │   ├── db/                   # Database models and connection
+│   │   │   ├── db.py             # Database configuration
+│   │   │   └── models.py         # SQLAlchemy models
 │   │   └── routers/
-│   │       ├── __init__.py
 │   │       └── chat.py           # Chat-specific routes
 │   │
 │   ├── chains/                   # Chain logic
-│   │   ├── __init__.py
-│   │   ├── symptex_chain.py      # Definition of chain
-│   │   ├── prompts.py            # Definition of behavior prompts
-│   │   └── patient_data.py       # Definition of patients
+│   │   ├── chat_chain.py         # Main chat chain definition
+│   │   ├── eval_chain.py         # Evaluation chain for feedback
+│   │   ├── prompts.py            # Behavior prompts for different conditions
+│   │   ├── patient_data.py       # Patient data definitions for testing
+│   │   └── formatting.py         # Patient data formatting utilities
 │   │
-│   ├── requirements.txt          # Dependencies for LangChain API
-│   └── Dockerfile                # Dockerfile for LangChain API
+│   ├── tests/                    # Test files
+│   │
+│   ├── requirements.txt
+│   └── Dockerfile
 │
 ├── frontend/
 │   ├── frontend.py               # Streamlit frontend
 │   ├── requirements.txt          # Dependencies for Streamlit frontend
-│   └── Dockerfile                # Dockerfile for Streamlit frontend
+│   ├── assets/                   # Frontend assets (images, etc.)
+│   └── Dockerfile
 │
-├── docker-compose.yml            # Docker Compose to orchestrate containers
+├── docker-compose.yml
 └── README.md
 ```
