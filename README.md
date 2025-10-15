@@ -8,6 +8,7 @@ history-taking skills.
 - [Docker](https://docs.docker.com/get-started/get-docker/)
 - Running ILuVI PostgreSQL database (see ILuVI repository)
 - Browser of your choice to interact with Symptex
+- Access to an API key for the [KISSKI ChatAI service](https://kisski.gwdg.de/leistungen/2-02-llm-service/)
 
 ## Getting Started
 
