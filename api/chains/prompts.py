@@ -1,4 +1,5 @@
-from langchain.prompts import ChatPromptTemplate, SystemMessagePromptTemplate, HumanMessagePromptTemplate, AIMessagePromptTemplate
+from langchain_core.prompts import ChatPromptTemplate, HumanMessagePromptTemplate, AIMessagePromptTemplate
+from langchain_core.prompts.chat import SystemMessagePromptTemplate
 from langchain_core.prompts import MessagesPlaceholder
 
 def get_prompt(patient_condition: str, talkativeness: str, patient_details: str) -> ChatPromptTemplate:
